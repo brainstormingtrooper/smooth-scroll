@@ -1,5 +1,5 @@
 /*!
- * smooth-scroll v12.1.4: Animate scrolling to anchor links
+ * smooth-scroll v12.1.5: Animate scrolling to anchor links
  * (c) 2017 Chris Ferdinandi
  * MIT License
  * http://github.com/cferdinandi/smooth-scroll
@@ -210,7 +210,11 @@
 	 * @returns {Number}
 	 */
 	var getDocumentHeight = function () {
-		return parseInt(window.getComputedStyle(document.documentElement).height, 10);
+		return Math.max(
+			document.body.scrollHeight, document.documentElement.scrollHeight,
+			document.body.offsetHeight, document.documentElement.offsetHeight,
+			document.body.clientHeight, document.documentElement.clientHeight
+		);
 	};
 
 	/**
@@ -390,7 +394,6 @@
 			animateSettings.before(anchor, toggle);
 
 			// Start scrolling animation
-			// startAnimateScroll();
 			smoothScroll.cancelScroll();
 			window.requestAnimationFrame(loopAnimateScroll);
 
@@ -429,12 +432,14 @@
 			if (event.button !== 0 || event.metaKey || event.ctrlKey) return;
 
 			// Check if a smooth scroll link was clicked
-			toggle = event.target.closest(selector);
+			toggle = event.path[0].closest(selector) || event.target.closest(selector);
+
 			if (!toggle || toggle.tagName.toLowerCase() !== 'a' || event.target.closest(settings.ignore)) return;
+				
 
 			// Only run if link is an anchor and points to the current page
 			if (toggle.hostname !== window.location.hostname || toggle.pathname !== window.location.pathname || !/#/.test(toggle.href)) return;
-
+				
 			// Get the sanitized hash
 			var hash;
 			try {
@@ -470,7 +475,7 @@
 			}
 
 			// Get the anchored element
-			anchor = document.querySelector(hash);
+			anchor = event.target.shadowRoot.querySelector(hash) || document.querySelector(hash);
 
 			// If anchored element exists, save the ID as a data attribute and remove it (prevents scroll jump)
 			if (!anchor) return;
